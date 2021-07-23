@@ -18,6 +18,9 @@ public class RestTemplateConfig {
 	@Autowired
 	CloseableHttpClient closableHttpClient;
 	
+	@Autowired
+	MyResponseErrorHandler responseErrorHandler;
+	
 	@Value("${digio.baseurl}")
 	private String baseUrl;
 	
@@ -25,6 +28,7 @@ public class RestTemplateConfig {
 	public RestTemplate restTemplate() {
 	    RestTemplate restTemplate = new RestTemplate(clientHttpRequestFactory());
 	    restTemplate.setUriTemplateHandler(new DefaultUriBuilderFactory(baseUrl));
+	    restTemplate.setErrorHandler(responseErrorHandler);
 	    return restTemplate;
 	}
 	
