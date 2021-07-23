@@ -6,6 +6,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -58,6 +60,8 @@ private String contentTypeValue;
 @Autowired
 private RestTemplate restTemplate;
 
+private Logger slf4jLogger = LoggerFactory.getLogger(this.getClass());
+
 	
 @PostMapping("/uploadPdf")
 public UploadPdfResponse uploadPdf(@RequestBody UploadPdfRequest uploadPdfRequest, HttpServletRequest httpServletRequest) {
@@ -67,17 +71,20 @@ public UploadPdfResponse uploadPdf(@RequestBody UploadPdfRequest uploadPdfReques
 	headers.set(contentType, httpServletRequest.getHeader(contentType));
 	
 	HttpEntity<UploadPdfRequest> entity = new HttpEntity<>(uploadPdfRequest, headers);
-	restTemplate.postForObject(uploadPdfEndpoint, entity, String.class); 
 	
-	UploadPdfResponse response = restTemplate.postForObject(uploadPdfEndpoint, entity, UploadPdfResponse.class);
+	ResponseEntity<UploadPdfResponse> response = restTemplate.exchange(uploadPdfEndpoint, 
+			HttpMethod.POST, entity, UploadPdfResponse.class);
 	
-	return response;
+	int statusCode = response.getStatusCodeValue();
+	slf4jLogger.info("---------status received--------" + statusCode);
+	
+	return response.getBody();
 	
 }
 
 @GetMapping("/getDocumentDetails/{documentId}")
 public UploadPdfResponse getDocumentDetails(@PathVariable String documentId, HttpServletRequest httpServletRequest) {
-	
+		
 	HttpHeaders headers = new HttpHeaders();
 
 	headers.set(authorization, httpServletRequest.getHeader(authorization));
@@ -93,6 +100,11 @@ public UploadPdfResponse getDocumentDetails(@PathVariable String documentId, Htt
 	
 	ResponseEntity<UploadPdfResponse> response = restTemplate.exchange(theGetDocumentDetailsEndpoint, 
 			HttpMethod.GET, entity, UploadPdfResponse.class, params);
+	
+	int statusCode = response.getStatusCodeValue();
+	
+	slf4jLogger.info("---------status received--------" + statusCode);	
+	
 	
 	return response.getBody();
 	
@@ -114,6 +126,10 @@ public ResponseEntity<byte[]> downloadDocument(@RequestParam("document_id") Stri
 	
 	ResponseEntity<byte[]> response = restTemplate.exchange(uriBuilder.toUriString(), 
 			HttpMethod.GET, entity, byte[].class);
+	
+	int statusCode = response.getStatusCodeValue();
+	
+	slf4jLogger.info("---------status received--------" + statusCode);
 	
 	byte[] pdfContent = response.getBody();
 	
