@@ -135,12 +135,14 @@ public ResponseEntity<byte[]> downloadDocument(@RequestParam("document_id") Stri
 	
 	byte[] pdfContent = response.getBody();
 	
+	
 	HttpHeaders pdfHeaders = new HttpHeaders();
 	pdfHeaders.setContentType(MediaType.APPLICATION_PDF);
-	ResponseEntity<byte[]> pdfResponse = new ResponseEntity<>(pdfContent, pdfHeaders, HttpStatus.OK);
+	ResponseEntity<byte[]> pdfResponse = new ResponseEntity<>(pdfContent, pdfHeaders, response.getStatusCode());
 	
 	
 	return pdfResponse;
+
 }
 
 private List<?> handleErrorResponse(int statusCode, ResponseEntity<?> response) {
