@@ -1,6 +1,8 @@
 package com.digioassignment.uploadpdf.uploadPdf.rest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,6 +29,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.digioassignment.uploadpdf.uploadPdf.entity.request.UploadPdfRequest;
+import com.digioassignment.uploadpdf.uploadPdf.entity.response.CustomResponse;
 import com.digioassignment.uploadpdf.uploadPdf.entity.response.UploadPdfResponse;
 
 @RestController
@@ -40,7 +43,7 @@ private String digioApiBaseUrl;
 private String uploadPdfEndpoint;
 	
 @Value("${digio.endpoint.getDocumentDetails}")
-private String getDocumentDetailsEndpoint;;
+private String getDocumentDetailsEndpoint;
 	
 @Value("${digio.endpoint.downloadDocument}")
 private String downloadDocumentEndpoint;
@@ -83,7 +86,7 @@ public UploadPdfResponse uploadPdf(@RequestBody UploadPdfRequest uploadPdfReques
 }
 
 @GetMapping("/getDocumentDetails/{documentId}")
-public UploadPdfResponse getDocumentDetails(@PathVariable String documentId, HttpServletRequest httpServletRequest) {
+public List<?> getDocumentDetails(@PathVariable String documentId, HttpServletRequest httpServletRequest) {
 		
 	HttpHeaders headers = new HttpHeaders();
 
@@ -103,11 +106,10 @@ public UploadPdfResponse getDocumentDetails(@PathVariable String documentId, Htt
 	
 	int statusCode = response.getStatusCodeValue();
 	
-	slf4jLogger.info("---------status received--------" + statusCode);	
+	slf4jLogger.info("---------status received--------" + statusCode);
 	
 	
-	return response.getBody();
-	
+	return handleErrorResponse(statusCode, response);
 }
 
 @GetMapping("/downloadDocument")
@@ -140,6 +142,46 @@ public ResponseEntity<byte[]> downloadDocument(@RequestParam("document_id") Stri
 	
 	return pdfResponse;
 }
+
+private List<?> handleErrorResponse(int statusCode, ResponseEntity<?> response) {
+	
+switch(statusCode) {
+	
+	case 403 : {
+		
+		List<CustomResponse> customResponses = new ArrayList<>();
+		
+		CustomResponse customResponse = new CustomResponse(HttpStatus.FORBIDDEN.value(), "Forbidden");
+	
+		customResponses.add(customResponse);
+		
+		return customResponses;
+		
+		}
+	
+	case 404 : {
+		
+		List<CustomResponse> customResponses = new ArrayList<>();
+		
+		CustomResponse customResponse = new CustomResponse(HttpStatus.NOT_FOUND.value(), "404 Not found");
+	
+		customResponses.add(customResponse);
+		
+		return customResponses;
+		
+		}
+	
+	default : {
+		
+		List<UploadPdfResponse> uploadPdfResponses = new ArrayList<>();
+		
+		uploadPdfResponses.add((UploadPdfResponse) response.getBody());
+		
+		return uploadPdfResponses;
+		
+		}
+	}
+ }
 
 }
 
